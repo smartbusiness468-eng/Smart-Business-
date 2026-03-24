@@ -5,68 +5,55 @@ use crate::ports::repositorios::venda_repositorio::VendaRepositorio;
 /// Caso de uso responsável por criar uma venda.
 ///
 /// Responsabilidade:
-/// - Orquestrar o fluxo de criação de venda
-/// - Garantir que a entidade seja validada
+/// - Orquestrar o fluxo de criação
+/// - Garantir validação via domínio
 /// - Delegar persistência ao repositório
-///
-/// Fluxo:
-/// 1. Recebe dados de entrada
-/// 2. Cria entidade de domínio (validação)
-/// 3. Persiste no repositório
 ///
 /// Importante:
 /// - Não conhece banco de dados
 /// - Não conhece HTTP
-/// - Depende apenas de abstrações (trait)
 pub struct CriarVenda {
     repo: Box<dyn VendaRepositorio>,
 }
 
-/// DTO de entrada do caso de uso.
-///
-/// Representa os dados necessários para criar uma venda.
+/// Dados de entrada para criação da venda
 ///
 /// Possíveis melhorias:
-/// - Adicionar cliente_id
-/// - Adicionar lista de itens
+/// - adicionar cliente_id
+/// - adicionar itens
 pub struct CriarVendaInput {
     pub total: f64,
 }
 
-/// DTO de saída do caso de uso.
-///
-/// Representa o resultado da operação.
+/// Resultado da operação
 ///
 /// Possíveis melhorias:
-/// - Retornar ID da venda
-/// - Retornar data/hora da venda
+/// - retornar ID da venda
 pub struct CriarVendaOutput {
     pub sucesso: bool,
 }
 
 impl CriarVenda {
-    /// Cria uma nova instância do caso de uso.
-    ///
-    /// Recebe a implementação do repositório via injeção de dependência.
-    /// Isso permite trocar banco de dados sem alterar o use case.
+    /// Cria instância do caso de uso com injeção de dependência
     pub fn novo(repo: Box<dyn VendaRepositorio>) -> Self {
         Self { repo }
     }
 
-    /// Executa o fluxo de criação de venda.
+    /// Executa o fluxo de criação de venda
     ///
-    /// Possíveis erros:
-    /// - ErroDominio::ValorInvalido (validação da entidade)
-    /// - ErroDominio::ErroPersistencia (falha ao salvar)
-    pub fn executar(
+    /// Fluxo:
+    /// 1. Cria entidade (validação)
+    /// 2. Persiste no banco
+    pub async fn executar(
         &self,
         input: CriarVendaInput,
     ) -> Result<CriarVendaOutput, ErroDominio> {
-        // Criação da entidade (já valida regras de negócio)
+
+        // Cria a entidade validando regras de negócio
         let venda = Venda::nova(input.total)?;
 
-        // Persistência via abstração (não depende de banco específico)
-        self.repo.salvar(venda)?;
+        // Persiste no banco via interface
+        self.repo.salvar(venda).await?;
 
         Ok(CriarVendaOutput { sucesso: true })
     }

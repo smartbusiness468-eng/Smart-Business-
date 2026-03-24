@@ -12,8 +12,14 @@ mod tests {
     /// - Garantir isolamento do use case
     struct RepoFake;
 
+    /// Implementação fake do repositório
+    ///
+    /// Importante:
+    /// - Agora é async para acompanhar o contrato real
+    /// - Sempre retorna sucesso (não simula erro ainda)
+    #[async_trait::async_trait]
     impl VendaRepositorio for RepoFake {
-        fn salvar(&self, _venda: Venda) -> Result<(), ErroDominio> {
+        async fn salvar(&self, _venda: Venda) -> Result<(), ErroDominio> {
             Ok(())
         }
     }
@@ -23,13 +29,14 @@ mod tests {
     /// Esperado:
     /// - Não deve retornar erro
     /// - Venda deve ser criada com sucesso
-    #[test]
-    fn deve_criar_venda_com_sucesso() {
+    #[tokio::test]
+    async fn deve_criar_venda_com_sucesso() {
         let use_case = CriarVenda::novo(Box::new(RepoFake));
 
         let input = CriarVendaInput { total: 100.0 };
 
-        let resultado = use_case.executar(input);
+        // Agora precisa de .await pois o use case é async
+        let resultado = use_case.executar(input).await;
 
         assert!(resultado.is_ok());
     }
@@ -38,13 +45,13 @@ mod tests {
     ///
     /// Esperado:
     /// - Deve retornar erro de domínio
-    #[test]
-    fn deve_falhar_com_valor_invalido() {
+    #[tokio::test]
+    async fn deve_falhar_com_valor_invalido() {
         let use_case = CriarVenda::novo(Box::new(RepoFake));
 
         let input = CriarVendaInput { total: 0.0 };
 
-        let resultado = use_case.executar(input);
+        let resultado = use_case.executar(input).await;
 
         assert!(resultado.is_err());
     }
@@ -53,13 +60,14 @@ mod tests {
     ///
     /// Esperado:
     /// - Campo sucesso deve ser true
-    #[test]
-    fn deve_retornar_sucesso_no_output() {
+    #[tokio::test]
+    async fn deve_retornar_sucesso_no_output() {
         let use_case = CriarVenda::novo(Box::new(RepoFake));
 
         let input = CriarVendaInput { total: 50.0 };
 
-        let resultado = use_case.executar(input).unwrap();
+        // unwrap após await
+        let resultado = use_case.executar(input).await.unwrap();
 
         assert!(resultado.sucesso);
     }
