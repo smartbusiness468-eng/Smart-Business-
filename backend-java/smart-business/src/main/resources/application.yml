@@ -1,0 +1,31 @@
+spring:
+  application:
+    name: smart-business
+
+  datasource:
+    url: jdbc:postgresql://localhost:5433/smart_business
+    username: smart
+    password: smart
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+server:
+  port: 8080
+
+jwt:
+  secret: smartbusiness-chave-secreta-jwt-256bits-para-assinar-tokens
+  expiration: 86400000
+
+pix:
+  recebedor-nome: SMART BUSINESS
+  chave: smartbusiness@pix.com
+  expiracao-segundos: 900
+  webhook-token: token-webhook-seguro-smartbusiness
